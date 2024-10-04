@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./database.db"
+}
+
+model Organization {
+  id                  String     @id @default(uuid())
+  clerkOrganizationId String?    @map("clerk_organization_id")
+  createdAt           DateTime   @default(now()) @map("created_at")
+  name                String?
+  tokens              Float?     @default(0)
+  clerkImageUrl       String?    @map("clerk_image_url")
+  // Relations
+  universes           Universe[]
+
+  @@map("organization")
+}
+
+model Universe {
+  id             String        @id @default(uuid())
+  name           String
+  description    String
+  entities       Entity[] // This defines the one-to-many relation between Universe and Entity
+  Organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+}
+
+model Entity {
+  id             String       @id @default(uuid())
+  name           String
+  description    String
+  templateType   TemplateType @relation(fields: [templateTypeId], references: [id])
+  templateTypeId String
+  universeId     String // Relation scalar field
+  universe       Universe     @relation(fields: [universeId], references: [id], onDelete: Cascade)
+  archive        Boolean      @default(false)
+  slug           String       @unique
+}
+
+model TemplateType {
+  id       String   @id @default(uuid())
+  type     String
+  entities Entity[] // Define the reverse relation from TemplateType to Entity
+}
